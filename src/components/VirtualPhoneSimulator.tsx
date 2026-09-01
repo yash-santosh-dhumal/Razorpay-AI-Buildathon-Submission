@@ -9,9 +9,12 @@ import {
   ShieldAlert, 
   RefreshCw,
   Zap,
-  Tag
+  Tag,
+  PhoneCall,
+  MessageSquare
 } from 'lucide-react';
 import { Transaction, ChatMessage } from '@/types';
+import { VoiceAgentCall } from '@/components/VoiceAgentCall';
 
 interface VirtualPhoneSimulatorProps {
   transaction: Transaction | null;
@@ -26,6 +29,7 @@ export const VirtualPhoneSimulator: React.FC<VirtualPhoneSimulatorProps> = ({
   onPaySuccess,
   isLoading = false,
 }) => {
+  const [activeTab, setActiveTab] = useState<'WHATSAPP' | 'VOICE_CALL'>('WHATSAPP');
   const [inputText, setInputText] = useState('');
   const [isPaying, setIsPaying] = useState(false);
 
@@ -71,165 +75,204 @@ export const VirtualPhoneSimulator: React.FC<VirtualPhoneSimulatorProps> = ({
 
       {/* Screen Container */}
       <div className="relative flex-1 bg-[#0b141a] rounded-[38px] flex flex-col overflow-hidden pt-6">
-        {/* WhatsApp Header */}
-        <div className="bg-[#1f2c34] px-4 py-3 flex items-center justify-between border-b border-[#2a3942] z-20">
-          <div className="flex items-center gap-2.5">
-            <div className="relative">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
-                RP
-              </div>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#1f2c34]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-slate-100">{transaction.merchantName}</span>
-                <span className="inline-flex items-center text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.2 rounded font-medium">
-                  Verified AI
-                </span>
-              </div>
-              <p className="text-[10px] text-emerald-400 font-medium">Autonomous Recovery Concierge</p>
-            </div>
+        {/* Channel Tab Switcher (WhatsApp vs AI Voice Call) */}
+        <div className="bg-[#182229] px-3 py-1.5 flex items-center justify-between border-b border-[#222e35] z-20">
+          <div className="flex items-center gap-1 bg-[#0d1418] p-0.5 rounded-lg border border-slate-800 text-[10px] font-semibold">
+            <button
+              onClick={() => setActiveTab('WHATSAPP')}
+              className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition-all ${
+                activeTab === 'WHATSAPP'
+                  ? 'bg-[#005c4b] text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <MessageSquare className="w-3 h-3" />
+              WhatsApp AI
+            </button>
+            <button
+              onClick={() => setActiveTab('VOICE_CALL')}
+              className={`px-2 py-0.5 rounded-md flex items-center gap-1 transition-all ${
+                activeTab === 'VOICE_CALL'
+                  ? 'bg-blue-600 text-white shadow'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <PhoneCall className="w-3 h-3" />
+              AI Voice Call
+            </button>
           </div>
-          <div className="text-[10px] text-slate-400 font-mono">
+          <span className="text-[10px] text-slate-400 font-mono">
             {transaction.customer.tier} Tier
-          </div>
-        </div>
-
-        {/* Failure Context Ribbon */}
-        <div className="bg-[#182229] px-3 py-1.5 text-[10px] text-slate-400 flex items-center justify-between border-b border-[#222e35]">
-          <span className="flex items-center gap-1">
-            <ShieldAlert className="w-3 h-3 text-amber-400" />
-            Declined: {transaction.paymentMethod}
           </span>
-          <span className="text-amber-400 font-mono font-semibold">₹{transaction.amount.toLocaleString('en-IN')}</span>
         </div>
 
-        {/* Message Feed */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
-          {transaction.chatHistory && transaction.chatHistory.length > 0 ? (
-            transaction.chatHistory.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex flex-col ${
-                  msg.sender === 'CUSTOMER' ? 'items-end' : 'items-start'
-                }`}
-              >
-                <div
-                  className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-md ${
-                    msg.sender === 'CUSTOMER'
-                      ? 'bg-[#005c4b] text-white rounded-tr-none'
-                      : msg.sender === 'SYSTEM'
-                      ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 rounded-xl w-full text-center'
-                      : 'bg-[#202c33] text-slate-100 rounded-tl-none border border-[#2d3a43]'
-                  }`}
-                >
-                  <p className="whitespace-pre-line">{msg.text}</p>
+        {/* Tab 1: AI Voice Agent Call Screen */}
+        {activeTab === 'VOICE_CALL' ? (
+          <VoiceAgentCall
+            transaction={transaction}
+            onPaySuccess={onPaySuccess}
+          />
+        ) : (
+          /* Tab 2: WhatsApp Chat Interface */
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* WhatsApp Header */}
+            <div className="bg-[#1f2c34] px-4 py-2.5 flex items-center justify-between border-b border-[#2a3942] z-20">
+              <div className="flex items-center gap-2.5">
+                <div className="relative">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xs shadow-md">
+                    RP
+                  </div>
+                  <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full border-2 border-[#1f2c34]" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-100">{transaction.merchantName}</span>
+                    <span className="inline-flex items-center text-[9px] bg-blue-500/20 text-blue-400 px-1 py-0.2 rounded font-medium">
+                      Verified AI
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-emerald-400 font-medium">Autonomous Concierge</p>
+                </div>
+              </div>
+            </div>
 
-                  {/* Payment Card Attachment if present */}
-                  {msg.actionPayload && (
-                    <div className="mt-2.5 p-2.5 rounded-xl bg-[#111b21] border border-blue-500/30 text-left">
-                      <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
-                        <span className="flex items-center gap-1.5">
-                          <CreditCard className="w-3.5 h-3.5 text-blue-400" />
-                          {msg.actionPayload.type === 'DISCOUNT_OFFER' ? 'Exclusive Recovery Link' : 'Razorpay Express Checkout'}
-                        </span>
-                        {msg.actionPayload.discountPercent && (
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">
-                            {msg.actionPayload.discountPercent}% OFF
-                          </span>
-                        )}
-                      </div>
+            {/* Failure Context Ribbon */}
+            <div className="bg-[#182229] px-3 py-1.5 text-[10px] text-slate-400 flex items-center justify-between border-b border-[#222e35]">
+              <span className="flex items-center gap-1">
+                <ShieldAlert className="w-3 h-3 text-amber-400" />
+                Declined: {transaction.paymentMethod}
+              </span>
+              <span className="text-amber-400 font-mono font-semibold">₹{transaction.amount.toLocaleString('en-IN')}</span>
+            </div>
 
-                      <div className="mt-2 flex items-baseline justify-between">
-                        <span className="text-[10px] text-slate-400">Total Payable:</span>
-                        <span className="text-sm font-bold text-white font-mono">
-                          ₹{(msg.actionPayload.amount || transaction.amount).toLocaleString('en-IN')}
-                        </span>
-                      </div>
+            {/* Message Feed */}
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px]">
+              {transaction.chatHistory && transaction.chatHistory.length > 0 ? (
+                transaction.chatHistory.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${
+                      msg.sender === 'CUSTOMER' ? 'items-end' : 'items-start'
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed shadow-md ${
+                        msg.sender === 'CUSTOMER'
+                          ? 'bg-[#005c4b] text-white rounded-tr-none'
+                          : msg.sender === 'SYSTEM'
+                          ? 'bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 rounded-xl w-full text-center'
+                          : 'bg-[#202c33] text-slate-100 rounded-tl-none border border-[#2d3a43]'
+                      }`}
+                    >
+                      <p className="whitespace-pre-line">{msg.text}</p>
 
-                      {!isRecovered ? (
-                        <button
-                          onClick={() => handleExecutePayment(msg.actionPayload?.amount || transaction.amount)}
-                          disabled={isPaying}
-                          className="mt-2.5 w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
-                        >
-                          {isPaying ? (
-                            <>
-                              <RefreshCw className="w-3 h-3 animate-spin" />
-                              <span>Processing via UPI...</span>
-                            </>
+                      {/* Payment Card Attachment if present */}
+                      {msg.actionPayload && (
+                        <div className="mt-2.5 p-2.5 rounded-xl bg-[#111b21] border border-blue-500/30 text-left">
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-200">
+                            <span className="flex items-center gap-1.5">
+                              <CreditCard className="w-3.5 h-3.5 text-blue-400" />
+                              {msg.actionPayload.type === 'DISCOUNT_OFFER' ? 'Exclusive Recovery Link' : 'Razorpay Express Checkout'}
+                            </span>
+                            {msg.actionPayload.discountPercent && (
+                              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">
+                                {msg.actionPayload.discountPercent}% OFF
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="mt-2 flex items-baseline justify-between">
+                            <span className="text-[10px] text-slate-400">Total Payable:</span>
+                            <span className="text-sm font-bold text-white font-mono">
+                              ₹{(msg.actionPayload.amount || transaction.amount).toLocaleString('en-IN')}
+                            </span>
+                          </div>
+
+                          {!isRecovered ? (
+                            <button
+                              onClick={() => handleExecutePayment(msg.actionPayload?.amount || transaction.amount)}
+                              disabled={isPaying}
+                              className="mt-2.5 w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
+                            >
+                              {isPaying ? (
+                                <>
+                                  <RefreshCw className="w-3 h-3 animate-spin" />
+                                  <span>Processing via UPI...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>Pay ₹{(msg.actionPayload.amount || transaction.amount).toLocaleString('en-IN')} in 1-Click</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </>
+                              )}
+                            </button>
                           ) : (
-                            <>
-                              <span>Pay ₹{(msg.actionPayload.amount || transaction.amount).toLocaleString('en-IN')} in 1-Click</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
-                            </>
+                            <div className="mt-2 text-[11px] font-semibold text-emerald-400 flex items-center justify-center gap-1 py-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              <span>Paid & Subscription Recovered</span>
+                            </div>
                           )}
-                        </button>
-                      ) : (
-                        <div className="mt-2 text-[11px] font-semibold text-emerald-400 flex items-center justify-center gap-1 py-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
-                          <span>Paid & Subscription Recovered</span>
                         </div>
                       )}
+
+                      <span className="block text-[9px] text-slate-400 text-right mt-1 font-mono">
+                        {msg.timestamp}
+                      </span>
                     </div>
-                  )}
 
-                  <span className="block text-[9px] text-slate-400 text-right mt-1 font-mono">
-                    {msg.timestamp}
-                  </span>
-                </div>
-
-                {/* Suggested Quick Options */}
-                {msg.options && !isRecovered && (
-                  <div className="mt-2 flex flex-wrap gap-1.5 max-w-[90%]">
-                    {msg.options.map((opt, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleOptionClick(opt)}
-                        className="text-[10px] font-medium bg-[#1f2c34] hover:bg-[#2a3942] text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-full shadow transition-all active:scale-95 text-left"
-                      >
-                        {opt}
-                      </button>
-                    ))}
+                    {/* Suggested Quick Options */}
+                    {msg.options && !isRecovered && (
+                      <div className="mt-2 flex flex-wrap gap-1.5 max-w-[90%]">
+                        {msg.options.map((opt, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleOptionClick(opt)}
+                            className="text-[10px] font-medium bg-[#1f2c34] hover:bg-[#2a3942] text-blue-300 border border-blue-500/30 px-2.5 py-1 rounded-full shadow transition-all active:scale-95 text-left"
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="text-center text-xs text-slate-500 py-10">
-              No chat messages. Recovery action: {transaction.recoveryChannel}
-            </div>
-          )}
+                ))
+              ) : (
+                <div className="text-center text-xs text-slate-500 py-10">
+                  No chat messages. Recovery action: {transaction.recoveryChannel}
+                </div>
+              )}
 
-          {isLoading && (
-            <div className="flex items-center gap-2 bg-[#202c33] text-slate-300 p-2.5 rounded-2xl rounded-tl-none max-w-[60%] border border-[#2d3a43]">
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" />
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.2s]" />
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.4s]" />
-              <span className="text-[10px] text-slate-400 ml-1">AI replying...</span>
+              {isLoading && (
+                <div className="flex items-center gap-2 bg-[#202c33] text-slate-300 p-2.5 rounded-2xl rounded-tl-none max-w-[60%] border border-[#2d3a43]">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce" />
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.2s]" />
+                  <div className="w-2 h-2 rounded-full bg-blue-400 animate-bounce [animation-delay:0.4s]" />
+                  <span className="text-[10px] text-slate-400 ml-1">AI replying...</span>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Input Bar */}
-        <div className="bg-[#1f2c34] p-2 flex items-center gap-2 border-t border-[#2a3942]">
-          <input
-            type="text"
-            placeholder={isRecovered ? "Payment resolved ✅" : "Type a response or objection..."}
-            disabled={isRecovered}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            className="flex-1 bg-[#2a3942] text-xs text-slate-100 placeholder-slate-400 px-3 py-2 rounded-full outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputText.trim() || isRecovered}
-            className="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white flex items-center justify-center transition-all shadow"
-          >
-            <Send className="w-3.5 h-3.5" />
-          </button>
-        </div>
+            {/* Input Bar */}
+            <div className="bg-[#1f2c34] p-2 flex items-center gap-2 border-t border-[#2a3942]">
+              <input
+                type="text"
+                placeholder={isRecovered ? "Payment resolved ✅" : "Type a response or objection..."}
+                disabled={isRecovered}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                className="flex-1 bg-[#2a3942] text-xs text-slate-100 placeholder-slate-400 px-3 py-2 rounded-full outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+              />
+              <button
+                onClick={handleSend}
+                disabled={!inputText.trim() || isRecovered}
+                className="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white flex items-center justify-center transition-all shadow"
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
