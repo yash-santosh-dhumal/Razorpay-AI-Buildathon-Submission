@@ -15,7 +15,9 @@ import {
   Cpu,
   Zap,
   Terminal,
-  Activity
+  Activity,
+  Key,
+  Flame
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MetricsOverview } from '@/components/MetricsOverview';
@@ -34,6 +36,11 @@ export default function Home() {
   const [rules, setRules] = useState<MerchantRuleConfig>(INITIAL_MERCHANT_RULES);
   const [isAiReplying, setIsAiReplying] = useState(false);
   const [isTriggering, setIsTriggering] = useState(false);
+
+  // Gemini Live Engine State
+  const [useLiveGemini, setUseLiveGemini] = useState<boolean>(false);
+  const [geminiApiKey, setGeminiApiKey] = useState<string>('');
+  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
 
   // Selected Transaction reference
   const selectedTx = transactions.find((t) => t.id === selectedTxId) || transactions[0] || null;
@@ -85,7 +92,12 @@ export default function Home() {
       const res = await fetch('/api/recovery/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userMessage: userText, transaction: selectedTx }),
+        body: JSON.stringify({ 
+          userMessage: userText, 
+          transaction: selectedTx,
+          useLiveGemini,
+          geminiApiKey: geminiApiKey || undefined
+        }),
       });
       const data = await res.json();
 
@@ -195,15 +207,87 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Engine Mode Toggle (Gemini Neural vs Heuristic Protocol) */}
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 bg-[#0c1324] border border-slate-800 px-3 py-1.5 rounded-full text-xs font-mono">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span className="text-slate-300">Razorpay Ingest: </span>
-              <span className="text-emerald-400 font-bold">ACTIVE</span>
+            <div className="flex items-center bg-[#0c1324] border border-slate-800 rounded-xl p-1 text-xs">
+              <button
+                onClick={() => setUseLiveGemini(false)}
+                className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                  !useLiveGemini
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                Fast Heuristic Engine
+              </button>
+              <button
+                onClick={() => {
+                  setUseLiveGemini(true);
+                  if (!geminiApiKey) setShowKeyModal(true);
+                }}
+                className={`px-3 py-1 rounded-lg font-semibold flex items-center gap-1.5 transition-all ${
+                  useLiveGemini
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 text-amber-300" />
+                Live Gemini 2.5 LLM
+              </button>
             </div>
+
+            {useLiveGemini && (
+              <button
+                onClick={() => setShowKeyModal(true)}
+                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all text-xs flex items-center gap-1"
+                title="Configure Gemini API Key"
+              >
+                <Key className="w-3.5 h-3.5 text-amber-400" />
+                <span className="font-mono">{geminiApiKey ? 'Key Active' : 'Set Key'}</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
+
+      {/* Gemini Key Config Modal */}
+      {showKeyModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0b101e] border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-2 text-purple-400">
+              <Flame className="w-5 h-5 text-amber-400" />
+              <h3 className="text-sm font-bold text-slate-100">Configure Live Gemini 2.5 Flash Engine</h3>
+            </div>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Enter your Google Gemini API Key to enable live neural agent dunning reasoning and dynamic conversation generation directly from Google GenAI.
+            </p>
+            <input
+              type="password"
+              placeholder="AIzaSy..."
+              value={geminiApiKey}
+              onChange={(e) => setGeminiApiKey(e.target.value)}
+              className="w-full bg-[#050811] border border-slate-700 text-slate-200 text-xs px-3.5 py-2.5 rounded-xl outline-none focus:border-purple-500 font-mono"
+            />
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                onClick={() => {
+                  if (!geminiApiKey) setUseLiveGemini(false);
+                  setShowKeyModal(false);
+                }}
+                className="px-4 py-2 text-xs text-slate-400 hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => setShowKeyModal(false)}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-semibold shadow-lg shadow-purple-500/20"
+              >
+                Save & Enable
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content Dashboard */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
@@ -244,7 +328,9 @@ export default function Home() {
                   <Smartphone className="w-4 h-4 text-blue-400" />
                   <span className="text-xs font-bold text-slate-200">Live Customer WhatsApp Simulator</span>
                 </div>
-                <span className="text-[10px] text-emerald-400 font-mono">Interactive Demo</span>
+                <span className="text-[10px] text-emerald-400 font-mono">
+                  {useLiveGemini ? 'Powered by Gemini 2.5' : 'Heuristic Mode'}
+                </span>
               </div>
 
               <VirtualPhoneSimulator
