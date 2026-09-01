@@ -125,9 +125,9 @@ export const SmartRetryMLOptimizer: React.FC = () => {
       </div>
 
       {/* Probability Curve Chart */}
-      <div className="h-64 w-full pt-2">
+      <div className="h-68 w-full pt-4">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={RETRY_CURVE_DATA} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
+          <AreaChart data={RETRY_CURVE_DATA} margin={{ top: 25, right: 20, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="probGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor={currentBank.color} stopOpacity={0.4} />

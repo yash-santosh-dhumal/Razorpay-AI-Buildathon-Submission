@@ -326,7 +326,7 @@ export default function Home() {
           </div>
 
           {/* Right Column: Virtual Phone WhatsApp Simulator (5 cols) */}
-          <div className="lg:col-span-5 flex flex-col items-center">
+          <div className="lg:col-span-5 flex flex-col items-center lg:sticky lg:top-20 self-start">
             <div className="w-full bg-gradient-to-b from-[#0d1527] to-[#070b14] border border-slate-800 rounded-3xl p-4 shadow-2xl flex flex-col items-center">
               <div className="flex items-center justify-between w-full px-2 mb-3">
                 <div className="flex items-center gap-2">
