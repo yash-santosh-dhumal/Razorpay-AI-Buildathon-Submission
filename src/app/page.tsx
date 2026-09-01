@@ -17,7 +17,8 @@ import {
   Terminal,
   Activity,
   Key,
-  Flame
+  Flame,
+  LineChart as ChartIcon
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { MetricsOverview } from '@/components/MetricsOverview';
@@ -26,6 +27,7 @@ import { LiveTransactionStream } from '@/components/LiveTransactionStream';
 import { ScenarioSimulator } from '@/components/ScenarioSimulator';
 import { BankHealthAndPlaybook } from '@/components/BankHealthAndPlaybook';
 import { AgentTraceInspector } from '@/components/AgentTraceInspector';
+import { SmartRetryMLOptimizer } from '@/components/SmartRetryMLOptimizer';
 import { INITIAL_BANK_HEALTH, INITIAL_MERCHANT_RULES, INITIAL_TRANSACTIONS, SIMULATION_SCENARIOS } from '@/lib/mockData';
 import { BankHealthStat, MerchantRuleConfig, RecoveryAnalytics, Transaction } from '@/types';
 
@@ -299,6 +301,9 @@ export default function Home() {
           onTriggerScenario={handleTriggerScenario}
           isTriggering={isTriggering}
         />
+
+        {/* Mathematical Smart Retry Probability Optimizer Visualizer */}
+        <SmartRetryMLOptimizer />
 
         {/* Primary Interactive Workspace: Live Feed + Virtual Phone Demo */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAIResponse } from '@/lib/recoveryEngine';
-import { callGeminiDunningAgent } from '@/lib/geminiService';
+import { callOpenRouterDunningAgent } from '@/lib/openRouterService';
 import { Transaction } from '@/types';
 
 export async function POST(req: NextRequest) {
@@ -26,12 +26,12 @@ export async function POST(req: NextRequest) {
     }
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const effectiveApiKey = geminiApiKey || process.env.GEMINI_API_KEY;
+    const effectiveApiKey = geminiApiKey || process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY;
 
-    // Use live Gemini LLM if requested and an API key is available
+    // Use live Neural LLM via OpenRouter if requested or if key is configured
     if (useLiveGemini && effectiveApiKey) {
       try {
-        const geminiResult = await callGeminiDunningAgent(
+        const neuralResult = await callOpenRouterDunningAgent(
           effectiveApiKey,
           userMessage,
           transaction,
@@ -40,19 +40,19 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({
           success: true,
-          modelUsed: 'gemini-2.5-flash',
+          modelUsed: 'openrouter/google/gemini-2.5-flash',
           message: {
             id: 'ai_resp_' + Date.now(),
             sender: 'AI_AGENT',
-            text: geminiResult.text,
+            text: neuralResult.text,
             timestamp: timeStr,
-            options: geminiResult.options,
-            actionPayload: geminiResult.actionPayload,
+            options: neuralResult.options,
+            actionPayload: neuralResult.actionPayload,
           },
         });
-      } catch (geminiError: any) {
-        console.warn('Gemini Live API failed, falling back to autonomous rule engine:', geminiError.message);
-        // Seamless fallback to deterministic engine
+      } catch (neuralError: any) {
+        console.warn('OpenRouter Live API failed, falling back to autonomous rule engine:', neuralError.message);
+        // Fallback gracefully to deterministic engine
       }
     }
 
